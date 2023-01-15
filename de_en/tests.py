@@ -152,11 +152,13 @@ class FilterViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         matching_words = json.loads(response.content.decode('utf-8'))
 
+        self.assertEqual(len(matching_words), 1)
+
         self.assertEqual(matching_words[0]['word'], 'Flugzeit')
         self.assertEqual(matching_words[0]['form'], 'f')
         self.assertEqual(matching_words[0]['definition'], 'flying time')
 
-    def test_filter_request_with_two_matchs_returns_both_matches(self):
+    def test_filter_request_with_two_matches_returns_both_matches(self):
         
         GermanToEnglishDefinition(word='Flugzeit', form='f', 
             definition='flying time').save()
@@ -167,6 +169,8 @@ class FilterViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         matching_words = json.loads(response.content.decode('utf-8'))
 
+        self.assertEqual(len(matching_words), 2)
+
         self.assertEqual(matching_words[0]['word'], 'Flugzeit')
         self.assertEqual(matching_words[0]['form'], 'f')
         self.assertEqual(matching_words[0]['definition'], 'flying time')
@@ -174,5 +178,50 @@ class FilterViewTests(TestCase):
         self.assertEqual(matching_words[1]['word'], 'Flugzeiten')
         self.assertEqual(matching_words[1]['form'], 'pl')
         self.assertEqual(matching_words[1]['definition'], 'flying times')
+    
+    def test_filter_request_with_limit_1_only_returns_one_match(self):
+        
+        GermanToEnglishDefinition(word='Flugzeit', form='f', 
+            definition='flying time').save()
+        GermanToEnglishDefinition(word='Flugzeiten', form='pl', 
+            definition='flying times').save()
 
+        response = self.client.get(reverse('filter'), {'filter':'Flug', 'limit': 1})
+        self.assertEqual(response.status_code, 200)
+        matching_words = json.loads(response.content.decode('utf-8'))
+
+        self.assertEqual(len(matching_words), 1)
+        self.assertEqual(matching_words[0]['word'], 'Flugzeit')
+        self.assertEqual(matching_words[0]['form'], 'f')
+        self.assertEqual(matching_words[0]['definition'], 'flying time')
+
+    def test_filter_request_gets_matches_in_length_order(self):
+
+        GermanToEnglishDefinition(word='aaa', form='f', 
+            definition='def').save()
+        GermanToEnglishDefinition(word='aaaa', form='f', 
+            definition='def').save()
+        GermanToEnglishDefinition(word='a', form='f', 
+            definition='def').save()
+        GermanToEnglishDefinition(word='aa', form='f', 
+            definition='def').save()
+
+        response = self.client.get(reverse('filter'), {'filter':'aa'})
+        self.assertEqual(response.status_code, 200)
+        matching_words = json.loads(response.content.decode('utf-8'))
+
+        self.assertEqual(len(matching_words), 3)
+        self.assertEqual(matching_words[0]['word'], 'aa')
+        self.assertEqual(matching_words[1]['word'], 'aaa')
+        self.assertEqual(matching_words[2]['word'], 'aaaa')
+
+    def test_filter_request_with_invalid_limit_returns_422_status_code(self):
+
+        GermanToEnglishDefinition(word='Flugzeit', form='f', 
+            definition='flying time').save()
+
+        for value in [-1, views.MAX_WORD_MATCH_LIMIT + 1, 0, 'a']:
+
+            response = self.client.get(reverse('filter'), {'filter':'Flug', 'limit': value})
+            self.assertEqual(response.status_code, 422)
 
