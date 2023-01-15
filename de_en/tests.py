@@ -91,6 +91,31 @@ class GermanToEnglishDictionaryTests(TestCase):
         self.assertEqual(word_entries[0]['form'], 'pl')
         self.assertEqual(word_entries[0]['definition'], 'flying times')
 
+    def test_dictionary_is_iterable(self):
+
+        text_file_text = \
+            'Flugzeit {f} | Flugzeiten {pl} :: flying time | flying times'
+
+        dictionary = GermanToEnglishDictionary()
+
+        with patch('builtins.open', mock_open(read_data=text_file_text)) as mock_file:
+
+            dictionary.read_from_ding_file(file_name='de-en.txt')
+            mock_file.assert_called_with('de-en.txt', 'r')
+
+        word_entries = [word for word in dictionary]
+        self.assertEqual(len(word_entries), 2)
+
+        self.assertEqual(word_entries[0]['word'], 'Flugzeit')
+        self.assertEqual(word_entries[0]['form'], 'f')
+        self.assertEqual(word_entries[0]['definition'], 'flying time')
+
+        self.assertEqual(word_entries[1]['word'], 'Flugzeiten')
+        self.assertEqual(word_entries[1]['form'], 'pl')
+        self.assertEqual(word_entries[1]['definition'], 'flying times')
+
+class GermanToEnglishDictionaryFileLoadTests(TestCase):
+
     def test_dictionary_reads_definitions_from_actual_ding_file(self):
 
         dictionary = GermanToEnglishDictionary()

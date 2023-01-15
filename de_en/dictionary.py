@@ -79,6 +79,18 @@ class GermanToEnglishDictionary:
             GermanToEnglishDictionary.add_words_from_ding_definition(
             definition_text, self._german_words)
 
+    def __iter__(self):
+        """ Get an iterable of all words in the dictionary. """
+
+        def _word_generator(self):
+            for key in self._german_words:
+                yield self._german_words[key]
+        return _word_generator(self)
+
+    def __len__(self):
+        """ Get the number of words in the dictionary. """
+        return len(self._german_words)
+
     def filter(self, *, key_substring):
         """ Get an iterable filter matching the given substring. """
 
