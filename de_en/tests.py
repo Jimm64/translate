@@ -1,6 +1,10 @@
+from de_en import views
 from django.test import TestCase
+from django.urls import reverse
 from de_en.dictionary import GermanToEnglishDictionary
+from de_en.models import GermanToEnglishDefinition
 from unittest.mock import MagicMock, patch, mock_open
+import json
 
 # Create your tests here.
 
@@ -114,6 +118,7 @@ class GermanToEnglishDictionaryTests(TestCase):
         self.assertEqual(word_entries[1]['form'], 'pl')
         self.assertEqual(word_entries[1]['definition'], 'flying times')
 
+
 class GermanToEnglishDictionaryFileLoadTests(TestCase):
 
     def test_dictionary_reads_definitions_from_actual_ding_file(self):
@@ -123,4 +128,51 @@ class GermanToEnglishDictionaryFileLoadTests(TestCase):
 
         word_entries = [word for word in dictionary.filter(key_substring="Flugzeit")]
         self.assertGreaterEqual(len(word_entries), 1)
+
+
+class FilterViewTests(TestCase):
+
+    def test_filter_request_with_no_text_gets_422_status_code(self):
+
+        response = self.client.get(reverse('filter'))
+        self.assertEqual(response.status_code, 422)
+
+    def test_request_with_no_match_returns_empty_response(self):
+
+        response = self.client.get(reverse('filter'), {'filter':'F'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content.decode('utf-8'), '[]')
+
+    def test_filter_request_with_match_returns_the_match(self):
+        
+        GermanToEnglishDefinition(word='Flugzeit', form='f', 
+            definition='flying time').save()
+
+        response = self.client.get(reverse('filter'), {'filter':'Flug'})
+        self.assertEqual(response.status_code, 200)
+        matching_words = json.loads(response.content.decode('utf-8'))
+
+        self.assertEqual(matching_words[0]['word'], 'Flugzeit')
+        self.assertEqual(matching_words[0]['form'], 'f')
+        self.assertEqual(matching_words[0]['definition'], 'flying time')
+
+    def test_filter_request_with_two_matchs_returns_both_matches(self):
+        
+        GermanToEnglishDefinition(word='Flugzeit', form='f', 
+            definition='flying time').save()
+        GermanToEnglishDefinition(word='Flugzeiten', form='pl', 
+            definition='flying times').save()
+
+        response = self.client.get(reverse('filter'), {'filter':'Flug'})
+        self.assertEqual(response.status_code, 200)
+        matching_words = json.loads(response.content.decode('utf-8'))
+
+        self.assertEqual(matching_words[0]['word'], 'Flugzeit')
+        self.assertEqual(matching_words[0]['form'], 'f')
+        self.assertEqual(matching_words[0]['definition'], 'flying time')
+
+        self.assertEqual(matching_words[1]['word'], 'Flugzeiten')
+        self.assertEqual(matching_words[1]['form'], 'pl')
+        self.assertEqual(matching_words[1]['definition'], 'flying times')
+
 
