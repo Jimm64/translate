@@ -132,6 +132,26 @@ class GermanToEnglishDictionaryFileLoadTests(TestCase):
 
 class FilterViewTests(TestCase):
 
+    def assert_word_is_found_by_filters_when_saved(self, *, word_filters, word, 
+        word_form, word_definition):
+        """
+        Save a given word, and test that the given filter(s)
+        retrieve it.
+        """
+
+        GermanToEnglishDefinition(word=word, form=word_form, 
+            definition=word_definition).save()
+
+        for word_filter in word_filters:
+            response = self.client.get(reverse('filter'), 
+                {'filter': word_filter})
+            matching_words = json.loads(response.content.decode('utf-8'))
+
+        self.assertEqual(len(matching_words), 1)
+        self.assertEqual(matching_words[0]['word'], word)
+        self.assertEqual(matching_words[0]['form'], word_form)
+        self.assertEqual(matching_words[0]['definition'], word_definition)
+
     def test_filter_request_with_no_text_gets_422_status_code(self):
 
         response = self.client.get(reverse('filter'))
@@ -144,19 +164,17 @@ class FilterViewTests(TestCase):
         self.assertEqual(response.content.decode('utf-8'), '[]')
 
     def test_filter_request_with_match_returns_the_match(self):
-        
-        GermanToEnglishDefinition(word='Flugzeit', form='f', 
-            definition='flying time').save()
 
-        response = self.client.get(reverse('filter'), {'filter':'Flug'})
-        self.assertEqual(response.status_code, 200)
-        matching_words = json.loads(response.content.decode('utf-8'))
+        self.assert_word_is_found_by_filters_when_saved(
+            word_filters=['Flug', 'Flugzeit'],
+            word='Flugzeit', word_form='f',
+            word_definition='flying time')
 
-        self.assertEqual(len(matching_words), 1)
+    def test_filter_for_word_with_unicode_char_returns_matching_word(self):
 
-        self.assertEqual(matching_words[0]['word'], 'Flugzeit')
-        self.assertEqual(matching_words[0]['form'], 'f')
-        self.assertEqual(matching_words[0]['definition'], 'flying time')
+        self.assert_word_is_found_by_filters_when_saved(
+            word_filters=['Frühstück'],
+            word='Frühstück', word_form='n', word_definition='breakfast')
 
     def test_filter_request_with_two_matches_returns_both_matches(self):
         
@@ -186,7 +204,8 @@ class FilterViewTests(TestCase):
         GermanToEnglishDefinition(word='Flugzeiten', form='pl', 
             definition='flying times').save()
 
-        response = self.client.get(reverse('filter'), {'filter':'Flug', 'limit': 1})
+        response = self.client.get(reverse('filter'), {'filter':'Flug',
+            'limit': 1})
         self.assertEqual(response.status_code, 200)
         matching_words = json.loads(response.content.decode('utf-8'))
 
@@ -224,20 +243,6 @@ class FilterViewTests(TestCase):
 
             response = self.client.get(reverse('filter'), {'filter':'Flug', 'limit': value})
             self.assertEqual(response.status_code, 422)
-
-    def test_filter_for_word_with_unicode_char_returns_matching_word(self):
-    
-        GermanToEnglishDefinition(word='Frühstück', form='n', 
-            definition='breakfast').save()
-
-        response = self.client.get(reverse('filter'), {'filter':'Frühstück'})
-        self.assertEqual(response.status_code, 200)
-        matching_words = json.loads(response.content.decode('utf-8'))
-
-        self.assertEqual(len(matching_words), 1)
-        self.assertEqual(matching_words[0]['word'], 'Frühstück')
-        self.assertEqual(matching_words[0]['form'], 'n')
-        self.assertEqual(matching_words[0]['definition'], 'breakfast')
 
     def test_lookup_page_request_returns_something(self):
             response = self.client.get(reverse('lookup'))
