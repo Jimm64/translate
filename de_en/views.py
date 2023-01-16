@@ -9,7 +9,8 @@ def translate(request):
     pass
 
 def lookup_page(request):
-    return HttpResponse('It works')
+
+    return render(request, 'de_en/lookup.html')
 
 MAX_WORD_MATCH_LIMIT = 10
 

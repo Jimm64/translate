@@ -225,3 +225,6 @@ class FilterViewTests(TestCase):
             response = self.client.get(reverse('filter'), {'filter':'Flug', 'limit': value})
             self.assertEqual(response.status_code, 422)
 
+    def test_lookup_page_request_returns_something(self):
+            response = self.client.get(reverse('lookup'))
+            self.assertEqual(response.status_code, 200)

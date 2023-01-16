@@ -1,0 +1,60 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'de_en/lookup.css' %}">
+
+<html>
+
+<head>
+</head>
+
+<script>
+
+
+update_filter_results = function() {
+
+    const filter_text_element = document.getElementById("filter_text")
+    filter_results_element = document.getElementById("filter_results")
+
+    request = new XMLHttpRequest()
+    request.open("GET", "filter?filter=" + escape(filter_text_element.value), false)
+    request.send()
+
+
+    if (request.status == 200)
+    {
+        result_list = JSON.parse(request.responseText)
+        result_html = ''
+
+        for (i in result_list) {
+            result_html += '<option class="definition">' + result_list[i].word
+
+            if (result_list[i].form != null) {
+                result_html += ' (' + result_list[i].form + ')'
+            }
+
+            result_html += ': ' + result_list[i].definition + '</option>'
+
+
+        }
+
+        filter_results_element.innerHTML = result_html
+
+    }
+}
+
+</script>
+
+<body>
+
+    <table width=100%>
+        <tr><td>Filter: <input oninput="update_filter_results(this)" id="filter_text", value="" /></td></tr>
+    </table>
+
+    <table width=100%>
+        <tr><td>Results:</td></tr>
+        <tr><td><select id="filter_results" size=10 /></td></tr>
+    </table>
+
+</body>
+
+</html>
