@@ -1,3 +1,4 @@
+from django.db.models.functions import Length
 from de_en.models import GermanToEnglishDefinition
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -20,6 +21,8 @@ def get_words_matching_filter(request):
     if not 'filter' in request.GET:
         return HttpResponse(status=422)
 
+    filter_text = request.GET['filter']
+
     if not 'limit' in request.GET:
         word_limit = 10
     else:
@@ -31,9 +34,13 @@ def get_words_matching_filter(request):
     if word_limit > MAX_WORD_MATCH_LIMIT or word_limit < 1:
         return HttpResponse(status=422)
 
-    words_matching_filter = GermanToEnglishDefinition.objects.filter(
-        word__startswith=request.GET['filter']) \
-        .order_by('word')[:word_limit]
+    if len(filter_text):
+        words_matching_filter = GermanToEnglishDefinition.objects.filter(
+            word__startswith=filter_text) \
+            .order_by(Length('word'), 'word')[:word_limit]
+    else:
+        words_matching_filter = []
+
 
     word_results = list(map(lambda matching_word: {
         'word': matching_word.word,
