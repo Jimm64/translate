@@ -23,20 +23,22 @@ update_filter_results = function() {
     if (request.status == 200)
     {
         result_list = JSON.parse(request.responseText)
-        result_html = ''
+        result_html = '<table>'
 
         for (i in result_list) {
-            result_html += '<option class="definition">' + result_list[i].word
+            result_html += '<tr><td><b>' + result_list[i].word + '</b>'
 
             if (result_list[i].form != null) {
                 result_html += ' (' + result_list[i].form + ')'
             }
 
-            result_html += ': ' + result_list[i].definition + '</option>'
+            result_html += ': ' + result_list[i].definition + '</td></tr>'
 
 
         }
 
+        result_html += '</table>'
+        console.log(result_html)
         filter_results_element.innerHTML = result_html
 
     }
@@ -46,13 +48,15 @@ update_filter_results = function() {
 
 <body>
 
+    <h1>German-English Dictionary Lookup</h1>
+
     <table width=100%>
         <tr><td>Filter: <input oninput="update_filter_results(this)" id="filter_text", value="" /></td></tr>
     </table>
 
     <table width=100%>
         <tr><td>Results:</td></tr>
-        <tr><td><select id="filter_results" size=10 /></td></tr>
+        <tr><td id="filter_results"/></tr>
     </table>
 
 </body>
