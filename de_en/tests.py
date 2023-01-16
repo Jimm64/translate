@@ -225,6 +225,20 @@ class FilterViewTests(TestCase):
             response = self.client.get(reverse('filter'), {'filter':'Flug', 'limit': value})
             self.assertEqual(response.status_code, 422)
 
+    def test_filter_for_word_with_unicode_char_returns_matching_word(self):
+    
+        GermanToEnglishDefinition(word='Frühstück', form='n', 
+            definition='breakfast').save()
+
+        response = self.client.get(reverse('filter'), {'filter':'Frühstück'})
+        self.assertEqual(response.status_code, 200)
+        matching_words = json.loads(response.content.decode('utf-8'))
+
+        self.assertEqual(len(matching_words), 1)
+        self.assertEqual(matching_words[0]['word'], 'Frühstück')
+        self.assertEqual(matching_words[0]['form'], 'n')
+        self.assertEqual(matching_words[0]['definition'], 'breakfast')
+
     def test_lookup_page_request_returns_something(self):
             response = self.client.get(reverse('lookup'))
             self.assertEqual(response.status_code, 200)

@@ -16,7 +16,7 @@ update_filter_results = function() {
     filter_results_element = document.getElementById("filter_results")
 
     request = new XMLHttpRequest()
-    request.open("GET", "filter?filter=" + escape(filter_text_element.value), false)
+    request.open("GET", "filter?filter=" + filter_text_element.value, false)
     request.send()
 
 
