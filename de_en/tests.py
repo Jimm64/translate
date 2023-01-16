@@ -8,6 +8,7 @@ import json
 
 # Create your tests here.
 
+
 class DingDefinitionTests(TestCase):
     """ Test reading definitions from a DING file. """
 
@@ -20,10 +21,12 @@ class DingDefinitionTests(TestCase):
             word_entries)
 
         self.assertTrue('Flugzeit' in word_entries)
+        self.assertEqual(word_entries['Flugzeit']['word'], 'Flugzeit')
         self.assertEqual(word_entries['Flugzeit']['form'], 'f')
         self.assertEqual(word_entries['Flugzeit']['definition'], 'flying time')
 
         self.assertTrue('Flugzeiten' in word_entries)
+        self.assertEqual(word_entries['Flugzeiten']['word'], 'Flugzeiten')
         self.assertEqual(word_entries['Flugzeiten']['form'], 'pl')
         self.assertEqual(word_entries['Flugzeiten']['definition'], 
             'flying times')
@@ -39,6 +42,8 @@ class DingDefinitionTests(TestCase):
             word_entries)
 
         self.assertTrue('das A und O [ugs.]' in word_entries)
+        self.assertEqual(word_entries['das A und O [ugs.]']['word'],
+            'das A und O [ugs.]')
         self.assertEqual(word_entries['das A und O [ugs.]']['definition'],
             'the nuts and bolts [coll.]')
         self.assertIsNone(word_entries['das A und O [ugs.]']['form'])
@@ -52,10 +57,12 @@ class DingDefinitionTests(TestCase):
             word_entries)
 
         self.assertTrue('Apfelbaum' in word_entries)
+        self.assertEqual(word_entries['Apfelbaum']['word'], 'Apfelbaum')
         self.assertEqual(word_entries['Apfelbaum']['form'], 'm')
         self.assertEqual(word_entries['Apfelbaum']['definition'], 'apple tree')
 
         self.assertTrue('Apfelbäume' in word_entries)
+        self.assertEqual(word_entries['Apfelbäume']['word'], 'Apfelbäume')
         self.assertEqual(word_entries['Apfelbäume']['form'], 'pl')
         self.assertEqual(word_entries['Apfelbäume']['definition'], 'apple trees')
 
@@ -64,6 +71,7 @@ class DingDefinitionTests(TestCase):
         word_entries = {}
         GermanToEnglishDictionary.add_words_from_ding_definition(
             '# Version :: 1.9 2020-12-22', word_entries)
+
 
 class GermanToEnglishDictionaryTests(TestCase):
 
@@ -140,7 +148,8 @@ class FilterViewTests(TestCase):
         """
 
         GermanToEnglishDefinition(word=word, form=word_form, 
-            definition=word_definition).save()
+            definition=word_definition, search_key=
+                GermanToEnglishDefinition.get_search_key_for(word)).save()
 
         for word_filter in word_filters:
             response = self.client.get(reverse('filter'), 
@@ -176,12 +185,22 @@ class FilterViewTests(TestCase):
             word_filters=['Frühstück'],
             word='Frühstück', word_form='n', word_definition='breakfast')
 
+    def test_filter_for_word_without_umlaut_matches_word_with_umlaut(self):
+
+        self.assert_word_is_found_by_filters_when_saved(
+            word_filters=['Frühstuck'],
+            word='Frühstück', word_form='n', word_definition='breakfast')
+
     def test_filter_request_with_two_matches_returns_both_matches(self):
         
         GermanToEnglishDefinition(word='Flugzeit', form='f', 
-            definition='flying time').save()
+            definition='flying time',
+            search_key=GermanToEnglishDefinition.get_search_key_for(
+                'Flugzeit')).save()
         GermanToEnglishDefinition(word='Flugzeiten', form='pl', 
-            definition='flying times').save()
+            definition='flying times',
+            search_key=GermanToEnglishDefinition.get_search_key_for(
+                'Flugzeiten')).save()
 
         response = self.client.get(reverse('filter'), {'filter':'Flug'})
         self.assertEqual(response.status_code, 200)
@@ -200,9 +219,13 @@ class FilterViewTests(TestCase):
     def test_filter_request_with_limit_1_only_returns_one_match(self):
         
         GermanToEnglishDefinition(word='Flugzeit', form='f', 
-            definition='flying time').save()
+            definition='flying time',
+            search_key=GermanToEnglishDefinition.get_search_key_for(
+                'Flugzeit')).save()
         GermanToEnglishDefinition(word='Flugzeiten', form='pl', 
-            definition='flying times').save()
+            definition='flying times',
+            search_key=GermanToEnglishDefinition.get_search_key_for(
+                'Flugzeiten')).save()
 
         response = self.client.get(reverse('filter'), {'filter':'Flug',
             'limit': 1})
@@ -217,13 +240,21 @@ class FilterViewTests(TestCase):
     def test_filter_request_gets_matches_in_length_order(self):
 
         GermanToEnglishDefinition(word='aaa', form='f', 
-            definition='def').save()
+            definition='def',
+            search_key=GermanToEnglishDefinition.get_search_key_for(
+            'aaa')).save()
         GermanToEnglishDefinition(word='aaaa', form='f', 
-            definition='def').save()
+            definition='def',
+            search_key=GermanToEnglishDefinition.get_search_key_for(
+            'aaaa')).save()
         GermanToEnglishDefinition(word='a', form='f', 
-            definition='def').save()
+            definition='def',
+            search_key=GermanToEnglishDefinition.get_search_key_for(
+            'a')).save()
         GermanToEnglishDefinition(word='aa', form='f', 
-            definition='def').save()
+            definition='def',
+            search_key=GermanToEnglishDefinition.get_search_key_for(
+            'aa')).save()
 
         response = self.client.get(reverse('filter'), {'filter':'aa'})
         self.assertEqual(response.status_code, 200)
@@ -237,7 +268,9 @@ class FilterViewTests(TestCase):
     def test_filter_request_with_invalid_limit_returns_422_status_code(self):
 
         GermanToEnglishDefinition(word='Flugzeit', form='f', 
-            definition='flying time').save()
+            definition='flying time',
+            search_key=GermanToEnglishDefinition.get_search_key_for(
+            'Flugzeit')).save()
 
         for value in [-1, views.MAX_WORD_MATCH_LIMIT + 1, 0, 'a']:
 

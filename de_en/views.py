@@ -35,8 +35,11 @@ def get_words_matching_filter(request):
         return HttpResponse(status=422)
 
     if len(filter_text):
+        filter_text = GermanToEnglishDefinition.get_search_key_for(
+            filter_text)
+
         words_matching_filter = GermanToEnglishDefinition.objects.filter(
-            word__startswith=filter_text) \
+            search_key__startswith=filter_text) \
             .order_by(Length('word'), 'word')[:word_limit]
     else:
         words_matching_filter = []

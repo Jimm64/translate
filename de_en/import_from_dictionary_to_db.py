@@ -25,9 +25,11 @@ with transaction.atomic():
 
     for definition in dictionary:
         GermanToEnglishDefinition(
-            word = definition['word'],
-            form = definition['form'],
-            definition = definition['definition']).save()
+            word=definition['word'],
+            form=definition['form'],
+            definition=definition['definition'],
+            search_key=GermanToEnglishDefinition.get_search_key_for(
+            definition['word'])).save()
 
         dictionary_word_saved_count += 1
 
