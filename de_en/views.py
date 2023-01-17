@@ -40,7 +40,7 @@ def get_words_matching_filter(request):
 
         words_matching_filter = GermanToEnglishDefinition.objects.filter(
             search_key__startswith=filter_text) \
-            .order_by(Length('word'), 'word')[:word_limit]
+            .order_by('base_word_length', 'word')[:word_limit]
     else:
         words_matching_filter = []
 

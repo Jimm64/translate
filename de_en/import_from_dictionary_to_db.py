@@ -28,6 +28,7 @@ with transaction.atomic():
             word=definition['word'],
             form=definition['form'],
             definition=definition['definition'],
+            base_word_length=definition['base_word_length'],
             search_key=GermanToEnglishDefinition.get_search_key_for(
             definition['word'])).save()
 

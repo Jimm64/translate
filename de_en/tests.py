@@ -56,10 +56,10 @@ class DingDefinitionTests(TestCase):
             'Apfelbaum {m} [bot.] | Apfelbäume {pl} :: apple tree | apple trees',
             word_entries)
 
-        self.assertTrue('Apfelbaum' in word_entries)
-        self.assertEqual(word_entries['Apfelbaum']['word'], 'Apfelbaum')
-        self.assertEqual(word_entries['Apfelbaum']['form'], 'm')
-        self.assertEqual(word_entries['Apfelbaum']['definition'], 'apple tree')
+        self.assertTrue('Apfelbaum [bot.]' in word_entries)
+        self.assertEqual(word_entries['Apfelbaum [bot.]']['word'], 'Apfelbaum [bot.]')
+        self.assertEqual(word_entries['Apfelbaum [bot.]']['form'], 'm')
+        self.assertEqual(word_entries['Apfelbaum [bot.]']['definition'], 'apple tree')
 
         self.assertTrue('Apfelbäume' in word_entries)
         self.assertEqual(word_entries['Apfelbäume']['word'], 'Apfelbäume')

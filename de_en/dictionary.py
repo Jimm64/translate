@@ -34,34 +34,48 @@ class GermanToEnglishDictionary:
 
         for i in range(len(words)):
 
-            word_parameters = re.match(
+            # Words may be split by semicolons.
+            # Give them all the same definition.
+            for word in words[i].split(';'):
 
-                # Get everyting up to a '{'
-                # Word entries may include space, punctuation, or addemdums.
-                '([^{]+)' 
+                word = word.strip()
 
-                # If there's a form, e.g. '{pl}' present, get it.
-                '(?:{([^}]+)})?', 
+                word_parameters = re.match(
 
-                words[i])
+                    # Get everyting up to a '{'
+                    # Word entries may include space, punctuation, or addemdums.
+                    '([^{]+)' 
 
-            if not word_parameters:
-                raise ValueError('Unable to parse line with words: {}'.format(
-                    words[i]))
+                    # If there's a form, e.g. '{pl}' present, get it.
+                    '(?:{([^}]+)})?', 
 
-            word_parameters = word_parameters.groups()
-            word_key = word_parameters[0].strip()
-            word_entry = {
-                'word': word_key,
-                'definition': definitions[i]
-            }
+                    word)
 
-            if word_parameters[1]:
-                word_entry['form'] = word_parameters[1]
-            else:
-                word_entry['form'] = None
+                if not word_parameters:
+                    raise ValueError('Unable to parse line with words: {}'
+                        .format(word))
 
-            word_dictionary[word_key] = word_entry
+                word_groups = word_parameters.groups()
+                word_key = word_groups[0].strip()
+
+                # If word has a form, put anything after it back on the word.
+                if word_groups[1]:
+                    addendum = word[word_parameters.span()[1]:].strip()
+                    if addendum:
+                        word_key += ' ' + addendum
+
+                word_entry = {
+                    'word': word_key,
+                    'definition': definitions[i],
+                    'base_word_length': len(word_groups[0].strip())
+                }
+
+                if word_groups[1]:
+                    word_entry['form'] = word_groups[1]
+                else:
+                    word_entry['form'] = None
+
+                word_dictionary[word_key] = word_entry
 
     def read_from_ding_file(self, *, file_name):
         """

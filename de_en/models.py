@@ -8,6 +8,10 @@ class GermanToEnglishDefinition(models.Model):
     # The actual word.
     word = models.CharField(max_length=64) 
 
+    # The length of the base word (i.e. minus
+    # any addendum)
+    base_word_length = models.IntegerField(null=True)
+
     # The form of the word e.g. m/f/n/pl
     # (as in male, female, neutral, plural)
     form = models.CharField(max_length=32,null=True)
