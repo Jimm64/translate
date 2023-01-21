@@ -9,8 +9,20 @@
 
 <script>
 
+update_match_results_timeout = null
+UPDATE_FILTER_RESULTS_DELAY_TIME = 300
 
-update_filter_results = function() {
+start_update_match_results_delay = function() {
+    /* Delay requesting filter results until the user stops typing. */
+
+    clearTimeout(update_match_results_timeout)
+    update_match_results_timeout = setTimeout(update_match_results, 
+        UPDATE_FILTER_RESULTS_DELAY_TIME)
+    
+}
+
+update_match_results = function() {
+    /* Request and display words matching the currently typed-in text. */
 
     const filter_text_element = document.getElementById("filter_text")
     filter_results_element = document.getElementById("filter_results")
@@ -51,7 +63,7 @@ update_filter_results = function() {
     <h1>German-English Dictionary Lookup</h1>
 
     <table width=100%>
-        <tr><td>Filter: <input oninput="update_filter_results(this)" id="filter_text", value="" /></td></tr>
+        <tr><td>Filter: <input oninput="start_update_match_results_delay(this)" id="filter_text", value="" /></td></tr>
     </table>
 
     <table width=100%>
